@@ -1,1 +1,1 @@
-print("AES Project is work!")
+print("Hello!")
