@@ -56,6 +56,10 @@ def make_rcon(n=10):
  
 # ---------- Key Expansion ----------
 def key_expansion(key: bytes):
+    if len(key) not in (16, 24, 32):
+        raise ValueError("Key phai dai 16, 24 hoac 32 byte")
+    nk = len(key) // 4
+def key_expansion(key: bytes):
     if not isinstance(key, bytes) or len(key) not in (16, 24, 32):
         raise ValueError("AES key must be 16, 24, or 32 bytes")
     nk = len(key) // 4                             # 4, 6, 8

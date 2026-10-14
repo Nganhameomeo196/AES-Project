@@ -36,7 +36,7 @@ Decryption:
     Plaintext
 
 Output:
-    AES_Flowchart_Method3.png
+    AES_Flowchart_Method.png
 ==========================================================
 """
 
@@ -46,8 +46,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.patches import (
     FancyBboxPatch,
-    FancyArrowPatch,
-    Ellipse
+    FancyArrowPatch
 )
 
 
@@ -340,11 +339,11 @@ def draw_main_round(
     step_w = w - 0.55
     step_h = 0.34
 
-    start_y = y + h - 1.02
+    start_y = y + h - 0.97
 
     for i, step in enumerate(steps):
 
-        current_y = start_y - i * 0.52
+        current_y = start_y - i * 0.44
 
         draw_box(
             ax,
@@ -366,7 +365,7 @@ def draw_main_round(
             draw_arrow(
                 ax,
                 x + w / 2,
-                current_y - 0.01,
+                current_y - 0.09,
                 current_y - 0.17,
                 "#94A3B8"
             )
@@ -758,7 +757,7 @@ def main():
     ax.set_facecolor(BG)
 
     ax.set_xlim(0, 13)
-    ax.set_ylim(0.8, 12.0)
+    ax.set_ylim(0.8, 13.1)
 
     ax.axis("off")
 
@@ -865,7 +864,7 @@ def main():
     # LƯU FILE
     # ------------------------------------------------------
 
-    output = "AES_Flowchart_Method3.png"
+    output = "AES_Flowchart_Method.png"
 
     plt.savefig(
         output,
@@ -883,7 +882,7 @@ def main():
     print("=" * 60)
     print()
     print("File:")
-    print("  AES_Flowchart_Method3.png")
+    print("  AES_Flowchart_Method.png")
     print()
     print("Encryption:")
     print("  Plaintext")

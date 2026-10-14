@@ -17,6 +17,10 @@ for i, s in enumerate(SBOX):
 # ---------- State: chuyen doi plaintext (16 byte) <-> ma tran 4x4 ----------
 # Quy uoc cot: State[r][c] = P[4c + r]  (dung theo dac ta FIPS-197)
 def bytes_to_state(data: bytes):
+    if len(data) != 16:
+        raise ValueError("Block phai dai dung 16 byte")
+    state = [[0] * 4 for _ in range(4)]
+def bytes_to_state(data: bytes):
     state = [[0] * 4 for _ in range(4)]
     for i in range(16):
         r, c = i % 4, i // 4
