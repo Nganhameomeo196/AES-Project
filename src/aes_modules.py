@@ -1,3 +1,4 @@
+"""Original week-2 teaching implementation; kept for regression comparison with aes_core."""
 # src/aes_modules.py
 # Các module cơ bản của AES được cài đặt trong tuần 2.
 
