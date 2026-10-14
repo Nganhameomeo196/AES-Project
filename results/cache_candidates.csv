@@ -1,0 +1,9 @@
+samples,candidate_count,candidate_hex
+1,16,0a 16 30 3c 3f 46 4c 6a 8e ae ba c3 d9 dc e9 f2
+2,1,3c
+4,1,3c
+8,1,3c
+16,1,3c
+32,1,3c
+64,1,3c
+256,1,3c

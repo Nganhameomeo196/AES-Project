@@ -3,7 +3,10 @@ AES core transforms: State, SubBytes, ShiftRows, MixColumns, AddRoundKey
 va cac phep nghich dao - dung chung S-box/Rcon voi key_expansion.py
 """
 
-from key_expansion import SBOX, _gmul
+try:
+    from .key_expansion import SBOX, _gmul
+except ImportError:  # direct script execution
+    from key_expansion import SBOX, _gmul
 
 # ---------- Inverse S-box ----------
 INV_SBOX = [0] * 256
@@ -54,10 +57,14 @@ _MIX = [[2, 3, 1, 1], [1, 2, 3, 1], [1, 1, 2, 3], [3, 1, 1, 2]]
 _INV_MIX = [[14, 11, 13, 9], [9, 14, 11, 13], [13, 9, 14, 11], [11, 13, 9, 14]]
 
 
+_GF_TABLE = {factor: tuple(_gmul(factor, value) for value in range(256))
+             for factor in (1, 2, 3, 9, 11, 13, 14)}
+
+
 def _mix_column(col, matrix):
     return [
-        _gmul(matrix[r][0], col[0]) ^ _gmul(matrix[r][1], col[1]) ^
-        _gmul(matrix[r][2], col[2]) ^ _gmul(matrix[r][3], col[3])
+        _GF_TABLE[matrix[r][0]][col[0]] ^ _GF_TABLE[matrix[r][1]][col[1]] ^
+        _GF_TABLE[matrix[r][2]][col[2]] ^ _GF_TABLE[matrix[r][3]][col[3]]
         for r in range(4)
     ]
 

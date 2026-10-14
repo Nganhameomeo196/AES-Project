@@ -7,45 +7,54 @@ Cau truc:
     InvShiftRows -> InvSubBytes -> AddRoundKey (voi RoundKey[0])
 """
 
-from key_expansion import round_keys
-from aes_core import (
-    bytes_to_state, state_to_bytes, inv_sub_bytes,
-    inv_shift_rows, inv_mix_columns, add_round_key, state_hex,
-)
+try:
+    from .key_expansion import round_keys
+    from . import aes_core as core
+except ImportError:  # direct script execution
+    from key_expansion import round_keys
+    import aes_core as core
+
 
 
 def aes_decrypt(ciphertext: bytes, key: bytes, trace=False) -> bytes:
+    if not isinstance(ciphertext, bytes) or len(ciphertext) != 16:
+        raise ValueError("AES block must be exactly 16 bytes")
+    if not isinstance(key, bytes) or len(key) not in (16, 24, 32):
+        raise ValueError("AES key must be 16, 24, or 32 bytes")
     rk = round_keys(key)
     nr = len(rk) - 1
 
-    state = bytes_to_state(ciphertext)
+    state = core.bytes_to_state(ciphertext)
 
     # Buoc dau: AddRoundKey voi RoundKey cuoi
-    state = add_round_key(state, rk[nr])
+    state = core.add_round_key(state, rk[nr])
     if trace:
-        print(f"Sau AddRoundKey[{nr}]       : {state_hex(state)}")
+        print(f"Sau AddRoundKey[{nr}]       : {core.state_hex(state)}")
 
     # Main Inverse Rounds
     for round_no in range(nr - 1, 0, -1):
-        state = inv_shift_rows(state)
-        state = inv_sub_bytes(state)
-        state = add_round_key(state, rk[round_no])
-        state = inv_mix_columns(state)
+        state = core.inv_shift_rows(state)
+        state = core.inv_sub_bytes(state)
+        state = core.add_round_key(state, rk[round_no])
+        state = core.inv_mix_columns(state)
         if trace:
-            print(f"Sau Inv Round {round_no:>2}        : {state_hex(state)}")
+            print(f"Sau Inv Round {round_no:>2}        : {core.state_hex(state)}")
 
     # Final Inverse Round: khong co InvMixColumns
-    state = inv_shift_rows(state)
-    state = inv_sub_bytes(state)
-    state = add_round_key(state, rk[0])
+    state = core.inv_shift_rows(state)
+    state = core.inv_sub_bytes(state)
+    state = core.add_round_key(state, rk[0])
     if trace:
-        print(f"Sau AddRoundKey[0]       : {state_hex(state)}")
+        print(f"Sau AddRoundKey[0]       : {core.state_hex(state)}")
 
-    return state_to_bytes(state)
+    return core.state_to_bytes(state)
 
 
 if __name__ == "__main__":
-    from aes_encrypt import aes_encrypt
+    try:
+        from .aes_encrypt import aes_encrypt
+    except ImportError:
+        from aes_encrypt import aes_encrypt
 
     tests = [
         ("AES-128", "000102030405060708090a0b0c0d0e0f",

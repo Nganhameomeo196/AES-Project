@@ -1,3 +1,4 @@
+from functools import lru_cache
 # ---------- S-box (sinh tu GF(2^8), co the thay bang bang tra cua nhom) ----------
 def _xtime(a):
     a <<= 1
@@ -55,6 +56,8 @@ def make_rcon(n=10):
  
 # ---------- Key Expansion ----------
 def key_expansion(key: bytes):
+    if not isinstance(key, bytes) or len(key) not in (16, 24, 32):
+        raise ValueError("AES key must be 16, 24, or 32 bytes")
     nk = len(key) // 4                             # 4, 6, 8
     nr = nk + 6                                    # 10, 12, 14
     rcon = make_rcon()
@@ -70,9 +73,17 @@ def key_expansion(key: bytes):
     return w                                       # round key r = w[4r : 4r+4]
  
  
+@lru_cache(maxsize=256)
+def _cached_round_keys(key: bytes):
+    words = key_expansion(key)
+    return tuple(tuple(sum(words[4*r:4*r+4], [])) for r in range(len(words)//4))
+
+
 def round_keys(key: bytes):
-    w = key_expansion(key)
-    return [sum(w[4 * r:4 * r + 4], []) for r in range(len(w) // 4)]
+    """Return independent mutable round-key lists; immutable schedules are cached."""
+    if not isinstance(key, bytes) or len(key) not in (16, 24, 32):
+        raise ValueError("AES key must be 16, 24, or 32 bytes")
+    return [list(item) for item in _cached_round_keys(key)]
  
  
 if __name__ == "__main__":

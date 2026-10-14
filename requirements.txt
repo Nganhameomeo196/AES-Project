@@ -1,0 +1,2 @@
+# AES implementation and unit tests use Python standard library only.
+# Optional charts: python -m pip install matplotlib>=3.7
