@@ -1,0 +1,37 @@
+
+=== 1. ENCRYPT / DECRYPT ===
+
+Data: Short (5 bytes)
+ECB: PASS
+CBC: PASS
+CTR: PASS
+GCM: PASS
+
+Data: Multiple blocks (48 bytes)
+ECB: PASS
+CBC: PASS
+CTR: PASS
+GCM: PASS
+
+Data: Not multiple of 16
+ECB: PASS
+CBC: PASS
+CTR: PASS
+GCM: PASS
+
+=== 2. IV / NONCE CHANGE ===
+ECB same ciphertext: PASS
+CBC ciphertext changes: PASS
+CTR ciphertext changes: PASS
+GCM ciphertext changes: PASS
+
+=== 3. GCM TAMPERING ===
+Modified ciphertext: PASS (detected)
+Modified tag: PASS (detected)
+Modified AAD: PASS (detected)
+
+=== 4. INVALID INPUT ===
+Invalid key: PASS (rejected)
+Invalid CBC IV: PASS (rejected)
+Invalid CTR counter: PASS (rejected)
+Invalid ECB ciphertext: PASS (rejected)
