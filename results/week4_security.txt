@@ -15,7 +15,20 @@ Plaintext (64 bytes = 4 blocks): Block 1 = Block 2 = Block 4 = 'A'*16, Block 3 =
   Block 2: d2d01700caf15385b3d5e19791c71297
   Block 3: 81cdd44f33acce7126a6af7dc710c7b0
   Block 4: e0be074820d18a3a35a11ce6b0e60df8
-=> Ket luan CBC/CTR/GCM: Cac khoi ban ma khac nhau hoan toan nho IV/Counter.
+
+[AES-CTR Ciphertext Blocks]:
+  Block 1: 4bd54af4002fb104b082d5198712ab1b
+  Block 2: 4322add5275933d7db9bbc4e0ae54e9d
+  Block 3: 586fd6f1535ee7baff808a0f8e6bae05
+  Block 4: 0c4aea93d81ede462362652906f4924f
+
+[AES-GCM Ciphertext Blocks]:
+  Block 1: d22de68f275ab6150a9320cb77e23149
+  Block 2: f2675ba712acbcb7a760b06c5505e32d
+  Block 3: c7e699b5b6c2f5a102b64ba582cb95d0
+  Block 4: 8dde55b145c6773a6f0f3393eb0d57a5
+
+=> Ket luan CBC / CTR / GCM: Cac khoi ban ma khac nhau hoan toan nho IV/Counter/Nonce, khong bi lo mau lap lai.
 
 =================================================================
 2. DEMO TAMPERING (CHINH SUA 1 BIT CIPHERTEXT GIUA 4 MODE)
@@ -28,8 +41,10 @@ Plaintext (64 bytes = 4 blocks): Block 1 = Block 2 = Block 4 = 'A'*16, Block 3 =
 =================================================================
 3. BRUTE-FORCE SIMULATION (KHONG GIAN KHOA THU NHO 8-BIT = 256 KHOA)
 =================================================================
-Ket qua: Tim thay khoa byte cuoi = 73 (sau 74/256 phep thu) trong 18.484 ms.
-Danh gia: Voi AES-128 day du (2^128 = 3.4e38 khoa), vet can thong thuong la BAT KHA THI!
+Ket qua: Tim thay khoa byte cuoi = 73 (sau 74/256 phep thu) trong 15.953 ms.
+Toc do thu nghiem: ~4,639 keys/giay.
+Uoc tinh AES-128 (2^128 keys): Can khoang ~2.32e+27 nam voi toc do nay.
+Danh gia: Vet can toan bo khong gian khoa AES-128 bang may tinh co dien la BAT KHA THI!
 
 =================================================================
 4. PHAN TICH AVALANCHE EFFECT (LAT TUNG BIT TRONG 128 BIT)

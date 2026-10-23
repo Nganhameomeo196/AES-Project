@@ -1,5 +1,20 @@
 import os
+import sys
+from pathlib import Path
 from time import perf_counter_ns
+
+# Ensure stdout/stderr handle UTF-8 on Windows terminals
+if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
+# Ensure project root is in sys.path regardless of execution directory
+ROOT_DIR = Path(__file__).resolve().parent.parent
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
 
 try:
     import numpy as np
@@ -8,22 +23,15 @@ try:
 except ImportError:
     HAS_PLOT = False
 
-try:
-    from src.aes_encrypt import aes_encrypt
-    from src.modes import (
-        ecb_encrypt, ecb_decrypt,
-        cbc_encrypt, cbc_decrypt,
-        ctr_crypt, gcm_encrypt, gcm_decrypt
-    )
-except ImportError:
-    from aes_encrypt import aes_encrypt
-    from modes import (
-        ecb_encrypt, ecb_decrypt,
-        cbc_encrypt, cbc_decrypt,
-        ctr_crypt, gcm_encrypt, gcm_decrypt
-    )
+from src.aes_encrypt import aes_encrypt
+from src.modes import (
+    ecb_encrypt, ecb_decrypt,
+    cbc_encrypt, cbc_decrypt,
+    ctr_crypt, gcm_encrypt, gcm_decrypt
+)
 
-os.makedirs("results", exist_ok=True)
+RESULTS_DIR = ROOT_DIR / "results"
+RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 log_lines = []
 
 def log(msg=""):
@@ -31,7 +39,7 @@ def log(msg=""):
     log_lines.append(msg)
 
 def count_diff_bits(b1: bytes, b2: bytes) -> int:
-    return sum(bin(x ^ y).count("1") for x, y in zip(b1, b2))
+    return sum((x ^ y).bit_count() for x, y in zip(b1, b2))
 
 # =========================================================================
 # 1. DEMO ECB PATTERN LEAKAGE 
@@ -58,6 +66,7 @@ def demo_ecb_pattern():
     ecb_blocks = [ct_ecb[i:i+16].hex() for i in range(0, 64, 16)]
     cbc_blocks = [ct_cbc[i:i+16].hex() for i in range(0, 64, 16)]
     ctr_blocks = [ct_ctr[i:i+16].hex() for i in range(0, 64, 16)]
+    gcm_blocks = [ct_gcm[i:i+16].hex() for i in range(0, 64, 16)]
 
     log("Plaintext (64 bytes = 4 blocks): Block 1 = Block 2 = Block 4 = 'A'*16, Block 3 = 'B'*16")
     log("\n[AES-ECB Ciphertext Blocks]:")
@@ -69,7 +78,15 @@ def demo_ecb_pattern():
     log("\n[AES-CBC Ciphertext Blocks]:")
     for idx, b in enumerate(cbc_blocks, 1):
         log(f"  Block {idx}: {b}")
-    log("=> Ket luan CBC/CTR/GCM: Cac khoi ban ma khac nhau hoan toan nho IV/Counter.\n")
+
+    log("\n[AES-CTR Ciphertext Blocks]:")
+    for idx, b in enumerate(ctr_blocks, 1):
+        log(f"  Block {idx}: {b}")
+
+    log("\n[AES-GCM Ciphertext Blocks]:")
+    for idx, b in enumerate(gcm_blocks, 1):
+        log(f"  Block {idx}: {b}")
+    log("\n=> Ket luan CBC / CTR / GCM: Cac khoi ban ma khac nhau hoan toan nho IV/Counter/Nonce, khong bi lo mau lap lai.\n")
 
     if HAS_PLOT:
         img_grid = np.zeros((16, 16), dtype=np.uint8)
@@ -86,14 +103,15 @@ def demo_ecb_pattern():
         fig, axes = plt.subplots(1, 3, figsize=(10, 3.5))
         axes[0].imshow(img_grid, cmap="gray")
         axes[0].set_title("Plaintext (Mau lap)")
-        axes[1].imshow(ecb_vis, cmap="viridis")
+        axes[1].imshow(ecb_vis, cmap="gray")
         axes[1].set_title("AES-ECB (Lo ro cau truc)")
-        axes[2].imshow(cbc_vis, cmap="viridis")
+        axes[2].imshow(cbc_vis, cmap="gray")
         axes[2].set_title("AES-CBC (Nhieu ngau nhien)")
         for ax in axes:
             ax.axis("off")
         plt.tight_layout()
-        plt.savefig("results/ecb_pattern_demo.png", dpi=200)
+        plot_path = RESULTS_DIR / "ecb_pattern_demo.png"
+        plt.savefig(plot_path, dpi=200)
         plt.close()
 
 # =========================================================================
@@ -162,8 +180,16 @@ def demo_bruteforce():
             found_byte = candidate
             break
     elapsed_ms = (perf_counter_ns() - t0) / 1e6
-    log(f"Ket qua: Tim thay khoa byte cuoi = {found_byte} (sau {found_byte+1}/256 phep thu) trong {elapsed_ms:.3f} ms.")
-    log("Danh gia: Voi AES-128 day du (2^128 = 3.4e38 khoa), vet can thong thuong la BAT KHA THI!\n")
+    tested_keys = found_byte + 1 if found_byte is not None else 256
+    speed = (tested_keys / (elapsed_ms / 1000)) if elapsed_ms > 0 else 0
+    total_keys = 2**128
+    est_seconds = total_keys / speed if speed > 0 else float("inf")
+    est_years = est_seconds / (365.25 * 86400)
+
+    log(f"Ket qua: Tim thay khoa byte cuoi = {found_byte} (sau {tested_keys}/256 phep thu) trong {elapsed_ms:.3f} ms.")
+    log(f"Toc do thu nghiem: ~{speed:,.0f} keys/giay.")
+    log(f"Uoc tinh AES-128 (2^128 keys): Can khoang ~{est_years:.2e} nam voi toc do nay.")
+    log("Danh gia: Vet can toan bo khong gian khoa AES-128 bang may tinh co dien la BAT KHA THI!\n")
 
 # =========================================================================
 # 4. PHÂN TÍCH AVALANCHE EFFECT 
@@ -214,7 +240,8 @@ def demo_avalanche():
         plt.legend()
         plt.grid(True, linestyle=":", alpha=0.6)
         plt.tight_layout()
-        plt.savefig("results/avalanche_chart.png", dpi=200)
+        plot_path = RESULTS_DIR / "avalanche_chart.png"
+        plt.savefig(plot_path, dpi=200)
         plt.close()
 
 if __name__ == "__main__":
@@ -222,8 +249,9 @@ if __name__ == "__main__":
     demo_tampering()
     demo_bruteforce()
     demo_avalanche()
-    with open("results/week4_security.txt", "w", encoding="utf-8") as f:
+    log_file_path = RESULTS_DIR / "week4_security.txt"
+    with open(log_file_path, "w", encoding="utf-8") as f:
         f.write("\n".join(log_lines))
-    print("Da luu log tai: results/week4_security.txt")
+    print(f"Da luu log tai: {log_file_path}")
     if HAS_PLOT:
-        print("Da luu 2 anh bieu do tai: results/ecb_pattern_demo.png va results/avalanche_chart.png")
+        print(f"Da luu 2 anh bieu do tai: {RESULTS_DIR / 'ecb_pattern_demo.png'} va {RESULTS_DIR / 'avalanche_chart.png'}")
