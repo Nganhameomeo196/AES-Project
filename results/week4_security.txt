@@ -1,0 +1,39 @@
+=================================================================
+1. DEMO ECB PATTERN LEAKAGE (HIEN TUONG LO MAU DU LIEU)
+=================================================================
+Plaintext (64 bytes = 4 blocks): Block 1 = Block 2 = Block 4 = 'A'*16, Block 3 = 'B'*16
+
+[AES-ECB Ciphertext Blocks]:
+  Block 1: dd4b1a0b47daa7067d0b59d95d58a6ae
+  Block 2: dd4b1a0b47daa7067d0b59d95d58a6ae
+  Block 3: 87f815ad0e513346e0afe99814b1a504
+  Block 4: dd4b1a0b47daa7067d0b59d95d58a6ae
+=> Kiem tra Block 1 == Block 2 == Block 4: True (LO MAU DU LIEU 100%!)
+
+[AES-CBC Ciphertext Blocks]:
+  Block 1: 265c6c2548555838c5fab3b6887803c8
+  Block 2: d2d01700caf15385b3d5e19791c71297
+  Block 3: 81cdd44f33acce7126a6af7dc710c7b0
+  Block 4: e0be074820d18a3a35a11ce6b0e60df8
+=> Ket luan CBC/CTR/GCM: Cac khoi ban ma khac nhau hoan toan nho IV/Counter.
+
+=================================================================
+2. DEMO TAMPERING (CHINH SUA 1 BIT CIPHERTEXT GIUA 4 MODE)
+=================================================================
+[ECB] Block 1 nguyen ven: True | Block 2 hong hoan toan: True | Block 3 nguyen ven: True
+[CBC] Block 1 nguyen ven: True | Block 2 hong hoan toan | Block 3 bi lat dung 1 byte (1 bit): b'Clock03_16Bytes!'
+[CTR] Khong bao loi! Toan bo plaintext chi bi lat dung 1 bit tai Block 2: b'Clock02_16Bytes!'
+[GCM] PASS (Detected) - Phat hien chinh sua qua Authentication Tag va TU CHOI giai ma (ValueError)!
+
+=================================================================
+3. BRUTE-FORCE SIMULATION (KHONG GIAN KHOA THU NHO 8-BIT = 256 KHOA)
+=================================================================
+Ket qua: Tim thay khoa byte cuoi = 73 (sau 74/256 phep thu) trong 18.484 ms.
+Danh gia: Voi AES-128 day du (2^128 = 3.4e38 khoa), vet can thong thuong la BAT KHA THI!
+
+=================================================================
+4. PHAN TICH AVALANCHE EFFECT (LAT TUNG BIT TRONG 128 BIT)
+=================================================================
+- Lat 1 bit Plaintext (128 vi tri): Bit dau = 62/128 | Trung binh = 63.27/128 bit (49.43%) | Min = 47, Max = 79
+- Lat 1 bit Cipher Key (128 vi tri): Bit dau = 59/128 | Trung binh = 63.85/128 bit (49.88%) | Min = 48, Max = 79
+=> Dat chuan Strict Avalanche Criterion (SAC ~ 50% = 64/128 bit)!
