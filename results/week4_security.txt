@@ -1,14 +1,14 @@
 =================================================================
-1. DEMO ECB PATTERN LEAKAGE (HIEN TUONG LO MAU DU LIEU)
+1. DEMO ECB PATTERN LEAKAGE (HIỆN TƯỢNG LỘ MẪU DỮ LIỆU)
 =================================================================
-Plaintext (64 bytes = 4 blocks): Block 1 = Block 2 = Block 4 = 'A'*16, Block 3 = 'B'*16
+Plaintext (64B = 4 khối): Khối 1 = Khối 2 = Khối 4 = 'A'*16, Khối 3 = 'B'*16
 
 [AES-ECB Ciphertext Blocks]:
   Block 1: dd4b1a0b47daa7067d0b59d95d58a6ae
   Block 2: dd4b1a0b47daa7067d0b59d95d58a6ae
   Block 3: 87f815ad0e513346e0afe99814b1a504
   Block 4: dd4b1a0b47daa7067d0b59d95d58a6ae
-=> Kiem tra Block 1 == Block 2 == Block 4: True (LO MAU DU LIEU 100%!)
+=> Kiểm tra Block 1 == Block 2 == Block 4: True (LỘ MẪU DỮ LIỆU 100%!)
 
 [AES-CBC Ciphertext Blocks]:
   Block 1: 265c6c2548555838c5fab3b6887803c8
@@ -28,27 +28,35 @@ Plaintext (64 bytes = 4 blocks): Block 1 = Block 2 = Block 4 = 'A'*16, Block 3 =
   Block 3: c7e699b5b6c2f5a102b64ba582cb95d0
   Block 4: 8dde55b145c6773a6f0f3393eb0d57a5
 
-=> Ket luan CBC / CTR / GCM: Cac khoi ban ma khac nhau hoan toan nho IV/Counter/Nonce, khong bi lo mau lap lai.
+=> Kết luận CBC / CTR / GCM: Các khối bản mã khác nhau hoàn toàn nhờ IV/Counter/Nonce.
 
 =================================================================
-2. DEMO TAMPERING (CHINH SUA 1 BIT CIPHERTEXT GIUA 4 MODE)
+2. DEMO TAMPERING (CHỈNH SỬA 1 BIT CIPHERTEXT GIỮA 4 MODE)
 =================================================================
-[ECB] Block 1 nguyen ven: True | Block 2 hong hoan toan: True | Block 3 nguyen ven: True
-[CBC] Block 1 nguyen ven: True | Block 2 hong hoan toan | Block 3 bi lat dung 1 byte (1 bit): b'Clock03_16Bytes!'
-[CTR] Khong bao loi! Toan bo plaintext chi bi lat dung 1 bit tai Block 2: b'Clock02_16Bytes!'
-[GCM] PASS (Detected) - Phat hien chinh sua qua Authentication Tag va TU CHOI giai ma (ValueError)!
+[ECB] Block 1 nguyên vẹn: True | Block 2 hỏng hoàn toàn: True | Block 3 nguyên vẹn: True
+[CBC] Block 1 nguyên vẹn: True | Block 2 hỏng hoàn toàn | Block 3 bị lật đúng 1 byte (1 bit): b'Clock03_16Bytes!'
+[CTR] Không báo lỗi! Toàn bộ plaintext chỉ bị lật đúng 1 bit tại Block 2: b'Clock02_16Bytes!'
+[GCM] PASS (Detected) - Phát hiện chỉnh sửa qua Authentication Tag và TỪ CHỐI giải mã (ValueError)!
 
 =================================================================
-3. BRUTE-FORCE SIMULATION (KHONG GIAN KHOA THU NHO 8-BIT = 256 KHOA)
+3. BRUTE-FORCE SIMULATION (KHÔNG GIAN KHÓA THU NHỎ 8-BIT = 256 KHÓA)
 =================================================================
-Ket qua: Tim thay khoa byte cuoi = 73 (sau 74/256 phep thu) trong 15.953 ms.
-Toc do thu nghiem: ~4,639 keys/giay.
-Uoc tinh AES-128 (2^128 keys): Can khoang ~2.32e+27 nam voi toc do nay.
-Danh gia: Vet can toan bo khong gian khoa AES-128 bang may tinh co dien la BAT KHA THI!
+Kết quả: Tìm thấy khóa byte cuối = 73 (sau 74/256 phép thử) trong 31.370 ms.
+Tốc độ thử nghiệm Python: ~2,359 keys/giây -> Cần ~4.57e+27 năm cho AES-128.
+Ước tính với phần cứng 10^12 keys/s: ~1.08e+19 năm | Siêu máy tính 10^18 keys/s: ~1.08e+13 năm.
+Đánh giá: Vét cạn toàn bộ không gian khóa AES-128 là BẤT KHẢ THI!
 
 =================================================================
-4. PHAN TICH AVALANCHE EFFECT (LAT TUNG BIT TRONG 128 BIT)
+4. PHÂN TÍCH AVALANCHE EFFECT (LẬT TỪNG BIT TRONG 128 BIT)
 =================================================================
-- Lat 1 bit Plaintext (128 vi tri): Bit dau = 62/128 | Trung binh = 63.27/128 bit (49.43%) | Min = 47, Max = 79
-- Lat 1 bit Cipher Key (128 vi tri): Bit dau = 59/128 | Trung binh = 63.85/128 bit (49.88%) | Min = 48, Max = 79
-=> Dat chuan Strict Avalanche Criterion (SAC ~ 50% = 64/128 bit)!
+- Lật 1 bit Plaintext (128 vị trí): Bit đầu = 62/128 | Trung bình = 63.27/128 bit (49.43%) | Min = 47, Max = 79
+- Lật 1 bit Cipher Key (128 vị trí): Bit đầu = 59/128 | Trung bình = 63.85/128 bit (49.88%) | Min = 48, Max = 79
+=> Đạt chuẩn Strict Avalanche Criterion (SAC ~ 50% = 64/128 bit)!
+
+=================================================================
+5. MÔ PHỎNG TẤN CÔNG KÊNH KỀ (CPA), CHÈN LỖI (DFA) & S-BOX DDT
+=================================================================
+- [CPA Side-Channel] Khóa mục tiêu: 0xA7 | Khôi phục: 0xA7 (r = 0.9003, Thành công: True)
+- [DFA Fault Attack] Chèn lỗi 1 byte ở Vòng 9 -> Làm thay đổi 4 byte bản mã tại vị trí [0, 7, 10, 13]
+- [S-box DDT] Giá trị vi sai tối đa (khác 0): 4 -> Xác suất 4/256 (0.0156)
+
